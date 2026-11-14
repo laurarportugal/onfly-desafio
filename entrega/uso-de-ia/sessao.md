@@ -87,3 +87,19 @@ Na amostra, os meses foram 2025-01 (8 reservas, 25 noites, 6684.00) e 2025-02 (1
 Você pediu que os documentos distinguissem amostra e dataset completo e descrevessem sua participação e o auxílio de IA. A documentação foi revisada para separar suas investigações, correções iniciais e decisões das análises, testes adicionais, implementações posteriores e execuções feitas pelo assistente.
 
 Ao revisar a exigência de registro, você destacou que o README aceitava export/JSON de outros assistentes ou um log consolidado de prompts e respostas. A conversa foi então registrada também em sessao.jsonl, derivado do arquivo local da sessão do Codex. O JSONL contém mensagens visíveis de usuário e assistente com horários, mas é filtrado: não inclui instruções internas, raciocínio nem detalhes de ferramentas e substitui caminhos absolutos por <workspace>. Este sessao.md complementa o JSONL com uma narrativa cronológica e explicita a divisão de responsabilidades.
+
+
+## 7. Verificação final dos documentos e da exportação
+
+Na revisão final da entrega, foi conferido o formato exigido pelo README. sessao.jsonl é um arquivo JSON Lines válido com uma linha de metadados e 102 mensagens visíveis, cada uma com timestamp, papel e conteúdo. Ele foi derivado do registro local do Codex, com mensagens de usuário e assistente; não é a exportação nativa integral e omite instruções internas, raciocínio e registros de ferramentas. O README também aceita export/JSON de assistentes ou log consolidado, e por isso o pacote mantém esse JSONL junto a este registro cronológico em Markdown. A distinção está declarada em README-ENTREGA.md e declaracao.md.
+
+Para tornar a validação reproduzível, README-ENTREGA.md registra comandos Bash e PowerShell para a suíte, Ruff e CLI, além da saída real da execução final de pytest e Ruff. A execução desta revisão foi:
+
+    python -m pytest -q
+    ....................................                                     [100%]
+    36 passed in 4.36s
+
+    python -m ruff check .
+    All checks passed!
+
+A tabela de arquivos e funções corrigidos ficou em README-ENTREGA.md. Ela liga cada correção ao ponto de implementação: CsvReservationRepository.read(), RowParser.parse(), CsvRateRepository.read(), calculate_room_nights(), is_billable(), convert_to_brl(), ReportBuilder.build()/format_money() e cli.main(). Esta seção documenta a conferência feita para a entrega final e não altera o conteúdo histórico de sessao.jsonl.

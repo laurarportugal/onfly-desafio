@@ -24,6 +24,21 @@ Além dos defeitos de cálculo, foram adicionadas validações para:
 
 Decisões de comportamento tomadas durante a revisão: um CSV de reservas com cabeçalho e sem registros gera um relatório zerado; check-in e checkout na mesma data são aceitos como estadia de zero noites; taxas duplicadas e nomes divergentes para o mesmo hotel são rejeitados.
 
+## Arquivos e funções corrigidos
+
+| Arquivo | Função/ponto de entrada | Responsabilidade corrigida |
+|---|---|---|
+| src/onfly_report/repositories/csv_reservation_repository.py | CsvReservationRepository.read() | Lê todas as linhas sem limite de 200 e transforma falhas de leitura, inclusive UTF-8 inválido, em erro de entrada. |
+| src/onfly_report/services/row_parser.py | RowParser.parse() | Valida campos obrigatórios, status, quartos positivos, valor finito, formato/data e ordem de check-in e checkout; preserva a linha no erro. |
+| src/onfly_report/repositories/csv_rate_repository.py | CsvRateRepository.read() | Valida taxas, finitude, duplicidade de moeda e tabela vazia. |
+| src/onfly_report/services/stay_calculator.py | calculate_room_nights() | Calcula a diferença entre datas completas, multiplicada pelos quartos. |
+| src/onfly_report/services/status_policy.py | is_billable() | Retorna verdadeiro apenas para CONFIRMED. |
+| src/onfly_report/services/currency_converter.py | convert_to_brl() | Multiplica Decimal pelo câmbio e transforma moeda sem taxa em erro de entrada. |
+| src/onfly_report/services/report_builder.py | ReportBuilder.build() e format_money() | Agrega apenas confirmadas, valida nomes por hotel_id em todos os status, ordena ranking e meses, calcula médias e serializa dinheiro/horário conforme o contrato. |
+| src/onfly_report/cli.py | main() | Impede sobrescrita dos CSVs de entrada e preserva os códigos de saída para entrada inválida/erro inesperado. |
+
+Os cinco testes fornecidos não foram alterados. Foram adicionados tests/test_reservation_validation.py e tests/test_remaining_validation.py.
+
 ## Investigação e abordagem
 
 O trabalho começou pelo mapeamento do fluxo __main__ → CLI → repositórios/parser → serviços → ReportBuilder → JSON e pela leitura do README como contrato funcional. A primeira execução exigiu configurar PYTHONPATH=src; depois disso, o relatório original foi comparado com as regras e com o CSV completo. Essa comparação mostrou 200 reservas processadas de 300, -1.393 noites, 193218.53 BRL e média 0.00, contra 300 reservas, 1.347 noites, 396170.00 BRL e média 294.11 esperados.
@@ -36,18 +51,31 @@ Os testes fornecidos permaneceram inalterados. Foram adicionados tests/test_rese
 
 ## Como validar
 
-Com Python 3.11 ou superior, pytest e Ruff instalados:
+Com Python 3.11 ou superior, pytest e Ruff instalados.
 
-```powershell
-python -m pytest -q
-python -m ruff check .
-$env:PYTHONPATH = "src"
-python -m onfly_report --input data/exemplo-validacao.csv --rates data/taxas_cambio.csv --output output/exemplo.json
-python -m onfly_report --input data/reservas_hoteis.csv --rates data/taxas_cambio.csv --output output/report.json
-```
+### Bash
 
-Resultado da validação final: **36 testes passaram** e `ruff check .` terminou com `All checks passed!`.
+    python -m pytest -q
+    python -m ruff check .
+    PYTHONPATH=src python -m onfly_report --input data/exemplo-validacao.csv --rates data/taxas_cambio.csv --output output/exemplo.json
+    PYTHONPATH=src python -m onfly_report --input data/reservas_hoteis.csv --rates data/taxas_cambio.csv --output output/report.json
 
+### PowerShell
+
+    python -m pytest -q
+    python -m ruff check .
+    $env:PYTHONPATH = "src"
+    python -m onfly_report --input data/exemplo-validacao.csv --rates data/taxas_cambio.csv --output output/exemplo.json
+    python -m onfly_report --input data/reservas_hoteis.csv --rates data/taxas_cambio.csv --output output/report.json
+
+### Saída observada na validação final
+
+    python -m pytest -q
+    ....................................                                     [100%]
+    36 passed in 4.36s
+
+    python -m ruff check .
+    All checks passed!
 ## Resultados
 
 ### Amostra de validação do README
