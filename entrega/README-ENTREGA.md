@@ -41,13 +41,13 @@ Os cinco testes fornecidos não foram alterados. Foram adicionados tests/test_re
 
 ## Investigação e abordagem
 
-O trabalho começou pelo mapeamento do fluxo __main__ → CLI → repositórios/parser → serviços → ReportBuilder → JSON e pela leitura do README como contrato funcional. A primeira execução exigiu configurar PYTHONPATH=src; depois disso, o relatório original foi comparado com as regras e com o CSV completo. Essa comparação mostrou 200 reservas processadas de 300, -1.393 noites, 193218.53 BRL e média 0.00, contra 300 reservas, 1.347 noites, 396170.00 BRL e média 294.11 esperados.
+Comecei entendendo a estrutura do projeto e como o CLI, os repositórios e os serviços se conectam. Depois comparei a execução original com as regras do README. Na primeira tentativa, faltou configurar PYTHONPATH=src; com o caminho ajustado, vi que o relatório processava 200 das 300 reservas, tinha -1.393 noites, total de 193218.53 BRL e média 0.00. Usei essa diferença para investigar cada etapa, em vez de tentar corrigir o relatório de uma vez.
 
-As correções dos defeitos originais foram feitas e conferidas por etapas. A leitura integral revelou que ainda havia erros de cálculo; o ajuste das datas revelou o filtro incorreto de NO_SHOW; corrigir o status deixou isolados o câmbio e a ordenação. Depois de cada alteração, foram gerados relatórios separados e/ou executados os testes relevantes. A sessão detalha as hipóteses, as perguntas, os resultados intermediários e quem conduziu cada mudança.
+Minhas hipóteses foram sendo confirmadas pelos resultados intermediários: a leitura parava em 200; a conta de noites ignorava a virada do mês; a política incluía NO_SHOW; a conversão dividia e passava por float; e a ordenação do ranking era crescente. Apliquei as correções principais uma por vez e pedi novas execuções para conferir o efeito e identificar o que ainda estava errado.
 
-Para os pontos de robustez, o processo passou a ser explicitamente test-first: adicionar um teste que reproduzisse a falha, observar a implementação atual, corrigir e rodar novamente a suíte. Esse fluxo foi aplicado às validações de linha e de data e aos casos de valores não finitos, taxa ausente ou duplicada, status desconhecido, codificação inválida, conflito de nome por hotel_id, fuso horário e proteção dos arquivos de entrada. Nos quatro comportamentos sem regra definida pelo README, a implementação só foi fechada depois das decisões da pessoa autora: relatório zerado para CSV sem registros, aceitar zero noites, rejeitar taxa duplicada e rejeitar nomes divergentes para o mesmo hotel.
+Na revisão de robustez, pedi primeiro testes que reproduzissem cada inconsistência. O fluxo foi: observar o comportamento atual, confirmar a falha, corrigir quando o README definia a regra e rodar a suíte novamente. Quando o comportamento não estava especificado, decidi antes de implementar: aceitar CSV sem reservas e estadia de zero noites, rejeitar taxa duplicada e rejeitar nomes diferentes para o mesmo hotel_id.
 
-Os testes fornecidos permaneceram inalterados. Foram adicionados tests/test_reservation_validation.py e tests/test_remaining_validation.py.
+O histórico da conversa está em entrega/uso-de-ia/sessao-original.md. Esse é o único registro de sessão incluído na entrega; mantive o arquivo sem alterações. A tabela acima relaciona cada alteração ao arquivo e à função correspondente.
 
 ## Como validar
 
@@ -119,4 +119,4 @@ Top cinco hotéis: H06 (`45165.46`), H10 (`45041.69`), H12 (`41647.69`), H07 (`3
 
 ## Registro de uso de IA
 
-A declaração está em entrega/uso-de-ia/declaracao.md. O diretório também contém sessao.md, uma reconstrução cronológica do processo, e sessao.jsonl, uma transcrição JSON Lines filtrada da sessão local do Codex, com mensagens visíveis e horários. O JSONL não é o arquivo interno integral de execução; instruções internas, raciocínio e detalhes de ferramentas foram excluídos. O documento Markdown organiza os marcos do JSONL por investigação, decisão, correção e validação, sem se apresentar como transcrição literal.
+A declaração está em entrega/uso-de-ia/declaracao.md. O arquivo entrega/uso-de-ia/sessao-original.md contém o histórico da conversa em Markdown e é o único registro de sessão incluído na entrega.
